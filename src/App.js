@@ -6,6 +6,8 @@ import PizzaForm from './components/PizzaForm';
 import PizzaSuccess from './components/PizzaSuccess';
 import Home from './components/Home';
 import { Route, Switch } from "react-router-dom";
+import formSchema from './validation/formSchema';
+import * as yup from 'yup';
 
 const initialFormValues = {
   size: '',
@@ -14,6 +16,7 @@ const initialFormValues = {
   extraCheese: false,
   glutenFree: false,
   instructions: '',
+  orderName: '',
   // Add a number input
 }
 
@@ -24,9 +27,10 @@ const initialErrorValues = {
   extraCheese: '',
   glutenFree: '',
   instructions: '',
+  orderName: '',
 }
 
-const initialButtonValue = false;
+const btnDisabled = true;
 
 const restaurantValues = [
   {
@@ -58,11 +62,25 @@ const App = () => {
 
   const [errors, setErrors] = useState(initialErrorValues);
 
-  const [order, setOrder] = useState({});
+  const [disabled, setDisabled] = useState(btnDisabled);
+
+  const [order, setOrder] = useState([]);
 
   // / / / / / / / Event Handlers / / / / / / / //
 
   const handleChange = (name, value) => {
+    yup
+    .reach(formSchema, name)
+    .validate(value)
+    .then(() => {
+      setErrors({...errors, [name]: "",
+    });
+  })
+  .catch(err => {
+    setErrors({...errors, [name]: err.errors[0]
+    });
+  })
+
     setFormValues({
       ...formValues, [name]: value
     })
@@ -77,9 +95,10 @@ const App = () => {
       }),
       glutenFree: formValues.glutenFree,
       instructions: formValues.instructions.trim(),
+      orderName: formValues.orderName.trim(),
     }
 
-    setOrder(newOrder);
+    postOrder(newOrder);
   }
 
   // / / / / / / / Axios Request Helpers / / / / / / / //
@@ -87,8 +106,7 @@ const App = () => {
   const postOrder = (newOrder) => {
     axios.post('https://reqres.in/api/pizza/', newOrder)
     .then(res => {
-      console.log(res.data);
-      setOrder(res.data);
+      setOrder([...order, res.data]);
       setFormValues(initialFormValues);
     })
     .catch(err => {
@@ -96,21 +114,27 @@ const App = () => {
     });
   }
 
+  // / / / / / / / Side Effect - Handles Button Status / / / / / / / //
+
+  useEffect(() => {
+    formSchema.isValid(formValues).then((valid) => {
+      setDisabled(!valid);
+    });
+  }, [formValues]);
+
 
   return (
     <div>
       <NavBar />
       
-
-
       {/* ROUTES HERE */
       <Switch>
 
         <Route path={'/pizza'}>
-          <PizzaForm values={formValues} errors={errors} change={handleChange} submit={handleSubmit} />
+          <PizzaForm values={formValues} errors={errors} change={handleChange} submit={handleSubmit} details={order} disabled={disabled} />
         </Route>
         <Route path={'/success'}>
-          <PizzaSuccess details={order} />
+          <PizzaSuccess />
         </Route>
         <Route path={'/'}>
           <Home values={restaurantValues} />

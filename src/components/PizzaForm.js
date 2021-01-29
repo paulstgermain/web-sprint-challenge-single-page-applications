@@ -1,13 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import PizzaSuccess from './PizzaSuccess';
+import { Redirect } from 'react-router-dom';
 
 const backgroundImage = 'https://images.unsplash.com/photo-1561350111-7daa4f284bc6?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80';
 
 
 export default function PizzaForm(props){
 
-    const { values, errors, change, submit, order } = props;
+    const { values, errors, change, submit, details, disabled } = props;
 
     const onChange = event => {
         console.log(event.target);
@@ -24,15 +25,15 @@ export default function PizzaForm(props){
         submit();
     }
 
-    const onClick = () => {
-        window.location.href = "/success";
-    }
+    // const onClick = () => {
+    //     window.location.href = "/success";
+    // }
 
     return (
-    <FormContainer onSubmit={onSubmit}>
+    <FormContainer>
         <h2>Build Your Own Pizza!</h2>
         <PizzaTron></PizzaTron>
-        <ZaForm>
+        <ZaForm onSubmit={onSubmit}>
             <label>Choice of Size
                 <select
                 onChange={onChange}
@@ -48,19 +49,21 @@ export default function PizzaForm(props){
             <h3>Choice of Sauce</h3>
             <label>Traditional
                 <input
+                datacy='traditional'
                 type='radio'
                 name='sauce'
-                value='Traditional'
-                checked={values.sauce === "Traditional"}
+                value='traditional'
+                checked={values.sauce === "traditional"}
                 onChange={onChange} />
                 </label>
 
             <label>White Sauce
                 <input
+                datacy='white'
                 type='radio'
                 name='sauce'
-                value='White'
-                checked={values.sauce === "White"}
+                value='white'
+                checked={values.sauce === "white"}
                 onChange={onChange} />
             </label>
 
@@ -102,10 +105,22 @@ export default function PizzaForm(props){
                 value={values.instructions}
                 onChange={onChange}></input>
             </label>
-            <button type='submit' onClick={onClick}>Add to Order</button>
-        </ZaForm>
-        {/* {order === {} ? '' : <PizzaSuccess details={order} />} */}
 
+            <label>Order Name
+                <input 
+                type='text'
+                name='orderName'
+                value={values.orderName}
+                onChange={onChange}></input>
+            </label>
+
+            <button type='submit' disabled={disabled}>Add to Order</button>
+        </ZaForm>
+        {
+            details === undefined ? '' : details.map(order => {
+                return <PizzaSuccess details={order} />
+            })
+            }
         
     </FormContainer>
     )
